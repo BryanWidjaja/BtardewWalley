@@ -1,0 +1,3 @@
+Chicken#1#200
+Cow#2#300
+Sheep#5#500
