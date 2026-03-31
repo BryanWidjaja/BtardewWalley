@@ -35,7 +35,7 @@ public class Main {
 		maps.add(GameMap.HOME_MAP);
 		maps.add(GameMap.ANIMAL_FARM_MAP);
 		
-		player = new Player("Tester", "Nigger");
+		player = new Player("Tester", "Tester");
 		
 		availableTools = new ArrayList<>();
 		loadAvailableTools();
@@ -755,22 +755,21 @@ public class Main {
 	}
     
     private void initSellAnimalProduct () {
-    	
-    	ArrayList<AnimalProduct> playerAnimalProduct = new ArrayList<>();
-    	
-    	for (PlayerItem item : player.getInventory()) {
-    		if (item.getItem() instanceof AnimalProduct) {
-    			playerAnimalProduct.add((AnimalProduct) item.getItem());
-    		}
-    	}
-    	
-    	if (playerAnimalProduct.isEmpty()) {
-    		System.out.println("No Animal Products obtained yet!");
-    		pause();
-    		return;
-    	}
-    	
 		while (true) {
+	    	boolean hasProducts = false;
+	    	for (PlayerItem item : player.getInventory()) {
+	    		if (item.getItem() instanceof AnimalProduct) {
+	    			hasProducts = true;
+	    			break;
+	    		}
+	    	}
+	    	
+	    	if (!hasProducts) {
+	    		System.out.println("No Animal Products in inventory!");
+	    		pause();
+	    		return;
+	    	}
+	    	
 			int counter = 1;
     		
 			spaceConsole();
@@ -974,21 +973,21 @@ public class Main {
     }
     
     private void initSellFarmProduct () {
-    	ArrayList<FarmProduct> playerFarmProduct = new ArrayList<>();
-    	
-    	for (PlayerItem item : player.getInventory()) {
-    		if (item.getItem() instanceof FarmProduct) {
-    			playerFarmProduct.add((FarmProduct) item.getItem());
-    		}
-    	}
-    	
-    	if (playerFarmProduct.isEmpty()) {
-    		System.out.println("No Farm Products obtained yet!");
-    		pause();
-    		return;
-    	}
-    	
 		while (true) {
+	    	boolean hasProducts = false;
+	    	for (PlayerItem item : player.getInventory()) {
+	    		if (item.getItem() instanceof FarmProduct) {
+	    			hasProducts = true;
+	    			break;
+	    		}
+	    	}
+	    	
+	    	if (!hasProducts) {
+	    		System.out.println("No Farm Products in inventory!");
+	    		pause();
+	    		return;
+	    	}
+	    	
 			int counter = 1;
     		
 			spaceConsole();
