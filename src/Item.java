@@ -22,12 +22,18 @@ public abstract class Item {
 			price = 1000;
 		else if (name.equals("Scissors")) 
 			price = 1500;
+		else if (name.equals("Hoe")) 
+			price = 3000;
 		else if (name.equals("Egg")) 
 			price = 100;
 		else if (name.equals("Milk")) 
 			price = 300;
 		else if (name.equals("Wool")) 
 			price = 800;
+		else if (name.equals("Wheat"))
+			price = 50;
+		else if (name.equals("Beetroot"))
+			price = 100;
 		
 		return price;
 	}

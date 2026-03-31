@@ -1,2 +1,3 @@
 Bucket#1000
 Shears#1500
+Hoe#3000

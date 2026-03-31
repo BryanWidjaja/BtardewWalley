@@ -6,6 +6,7 @@ public class Player {
 	private double money;
 	private ArrayList<PlayerItem> inventory;
 	private ArrayList<Animal> animals;
+	private ArrayList<Plant> plants;
 	private Coordinate x;
 	private Coordinate y;
 	private int day;
@@ -17,8 +18,9 @@ public class Player {
 		this.money = 1000.0;
 		this.inventory = new ArrayList<>();
 		this.animals = new ArrayList<>();
-		this.x = new Coordinate(9);
-		this.y = new Coordinate(19);
+		this.plants = new ArrayList<>();
+		this.x = new Coordinate(10);
+		this.y = new Coordinate(21);
 		this.day = 1;
 	}
 
@@ -60,6 +62,14 @@ public class Player {
 
 	public void setAnimals(ArrayList<Animal> animals) {
 		this.animals = animals;
+	}
+	
+	public ArrayList<Plant> getPlants() {
+		return plants;
+	}
+
+	public void setPlants(ArrayList<Plant> plants) {
+		this.plants = plants;
 	}
 
 	public Coordinate getX() {
