@@ -26,15 +26,16 @@ Interaction revolves around moving your character (`P`) onto points of interest 
 
 Head North to the **Plant Farm** map.
 
-- **Farm Shop**: Step on the shop at `(x=4, y=23)` to access the menu. You can buy seeds (like Wheat and Beetroot) or sell harvested Farm Products here.
-- **Planting**: Step onto any empty dirt tile (`.`) to open the planting menu. Select a seed from your inventory to plant it.
+- **Farm Shop**: Step on the shop tile to access the menu. You can buy seeds (like Wheat and Beetroot) or sell harvested Farm Products here.
+- **Planting**: Step onto any empty dirt tile (`.`) to open the planting menu. Select a seed from your inventory to plant it. **Note:** You must have a `Hoe` in your inventory to plant seeds. You can also select the exit option in the prompt if you decide not to plant.
 - **Harvesting**: Plants take time to grow. Once their `growthTime` expires, the lowercase crop symbol will mature into an **UPPERCASE** letter. Step on the mature crop to automatically harvest it!
 
 ### 2. Animal Husbandry
 
-Head to the **Home Map** to find the **Animal Shop** at `(x=15, y=16)`. Here, you can buy or sell animals such as Chickens (`c`), Cows (`C`), and Sheep (`S`).
+Head to the **Home Map** to find the **Animal Shop**. Here, you can buy or sell animals such as Chickens (`c`), Cows (`C`), and Sheep (`S`).
 
-- Purchased animals will automatically spawn in the **Animal Farm** map located to the East.
+- Purchased animals will automatically spawn in the **Animal Farm** map located to the East. Note that each animal must be given a unique name!
+- **Visuals**: Animals and the player are rendered with distinct colors on the map to easily identify them.
 - **Collecting Goods**: Animals produce products over time. When an animal is ready to be harvested, stepping on it will prompt you to collect its goods.
   - **Chickens**: Produce Eggs. No tools required.
   - **Cows**: Produce Milk. Requires a `Bucket` in your inventory.
@@ -42,11 +43,11 @@ Head to the **Home Map** to find the **Animal Shop** at `(x=15, y=16)`. Here, yo
 
 ### 3. Buying Tools
 
-You can purchase essential equipment from the **Tool Shop** located on the **Home Map** at `(x=17, y=31)`. Make sure to buy a Bucket and Shears as early as possible if you plan on raising Cows and Sheep!
+You can purchase essential equipment from the **Tool Shop** located on the **Home Map**. Make sure to buy a Hoe for planting, and a Bucket and Shears as early as possible if you plan on raising Cows and Sheep!
 
 ### 4. Sleeping & Time Progression
 
-Time in Btardew Walley progresses when you sleep. Head to your bed on the **Home Map** at `(x=7, y=21)` and confirm to sleep.
+Time in Btardew Walley progresses when you sleep. Head to your bed on the **Home Map** and confirm to sleep.
 Sleeping advances the required "days" for animal harvest cycles and crop maturation.
 
 ---
