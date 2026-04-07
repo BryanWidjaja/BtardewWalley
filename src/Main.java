@@ -1,6 +1,9 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,19 +26,30 @@ public class Main {
 	private Random rand;
 	
 	private boolean devMode = false;
+	private User currentUser;
+	
+	private static final String RESET = "\u001B[0m";
+	private static final String GREEN = "\u001B[32m";
+	private static final String YELLOW = "\u001B[33m";
+	private static final String WHITE_BRIGHT = "\u001B[97m";
+	private static final String BROWN = "\u001B[38;5;94m";
 
 	public static void main(String[] args) {
 		new Main().init();
 	}
 	
 	private void init () {
+		sc = new Scanner(System.in);
+		rand = new Random();
+		
+		loginOrRegister();
+		
 		maps = new ArrayList<>();
-
 		maps.add(GameMap.PLANT_FARM_MAP);
 		maps.add(GameMap.HOME_MAP);
 		maps.add(GameMap.ANIMAL_FARM_MAP);
 		
-		player = new Player("Tester", "Tester");
+		player = new Player(currentUser.getUsername(), "");
 		
 		availableTools = new ArrayList<>();
 		loadAvailableTools();
@@ -46,8 +60,7 @@ public class Main {
 		availableSeeds = new ArrayList<>();
 		loadAvailableSeeds();
 		
-		sc = new Scanner(System.in);
-		rand = new Random();
+		loadPlayerData();
 		
 		run();
 	}
@@ -185,7 +198,9 @@ public class Main {
 	        StringBuilder line = new StringBuilder();
 
 	        if (row < mapHeight) {
-	            line.append(new String(currMap[row]));
+	            for (int col = 0; col < currMap[row].length; col++) {
+	                line.append(colorize(currMap[row][col]));
+	            }
 	        } else {
 	            line.append(" ".repeat(mapWidth));
 	        }
@@ -239,6 +254,9 @@ public class Main {
             case 'e':
             	openInventory();
                 return;
+            case 'q':
+            	exitGame();
+            	return;
             case 'r':
             	if (devMode)
             		initSleep();
@@ -468,6 +486,12 @@ public class Main {
     
     private void triggerFarmTile (int x, int y, boolean planting) {
     	if (planting) {
+    		if (!checkInventory("Hoe")) {
+    			System.out.println("You need a Hoe to plant! Buy one from the tool store.");
+    			pause();
+    			return;
+    		}
+    		
     		int counter = 1;
         	ArrayList<PlantSeed> playerSeeds = new ArrayList<>();
         	
@@ -487,14 +511,16 @@ public class Main {
         	int choice = -1;
         	
         	do {
-        		System.out.printf("Which seed do you want to plant [1-%d]: \n", playerSeeds.size());
+        		System.out.printf("Which seed do you want to plant [1-%d] [0 to exit]: \n", playerSeeds.size());
         		try {
 					choice = sc.nextInt();
 					sc.nextLine();
 				} catch (Exception e) {
 					sc.nextLine();
 				}
-        	} while (choice < 1 || choice > playerSeeds.size());
+        	} while (choice < 0 || choice > playerSeeds.size());
+        	
+        	if (choice == 0) return;
         	
         	PlantSeed selectedSeed = playerSeeds.get(choice - 1);
         	
@@ -674,11 +700,21 @@ public class Main {
                         player.setMoney(player.getMoney() - selectedAnimal.getPrice());
                         
                         String name = null;
+                        boolean nameTaken;
                         
                         do {
                         	System.out.print("Input new farm animal's name [<= 15 characters]: ");
                         	name = sc.nextLine();
-                        } while (name.length() > 15 || name.trim().isEmpty());
+                        	
+                        	nameTaken = false;
+                        	for (Animal a : player.getAnimals()) {
+                        		if (a.getName().equalsIgnoreCase(name.trim())) {
+                        			nameTaken = true;
+                        			System.out.println("Name already taken!");
+                        			break;
+                        		}
+                        	}
+                        } while (name.length() > 15 || name.trim().isEmpty() || nameTaken);
                         
                         insertAnimal(selectedAnimal.getType(), name);
 
@@ -1353,7 +1389,7 @@ public class Main {
 	        	int grade = getGrade();
 	        	
 	        	while (true) {
-	        		System.out.printf("Want to take %s's %s?\n", animal.getName(), animal.getAnimalProduct());
+	        		System.out.printf("Want to take %s %s?\n", possessive(animal.getName()), animal.getAnimalProduct());
 	        		System.out.println("1. Take");
 	        		System.out.println("2. Don't take");
 	        		System.out.print(">> ");
@@ -1363,11 +1399,11 @@ public class Main {
 
 	                    if (choice == 1) {
 		        			if (animal.getSymbol() == 'C' && !checkInventory("Bucket")) {
-		        				System.out.println("You don't have a bucket to get " + animal.getName() + "'s " + animal.getAnimalProduct());
+		        				System.out.println("You don't have a bucket to get " + possessive(animal.getName()) + " " + animal.getAnimalProduct());
 		        				pause();
 		        				return;
 		        			} else if (animal.getSymbol() == 'S' && !checkInventory("Shears")) {
-		        				System.out.println("You don't have shears to get " + animal.getName() + "'s " + animal.getAnimalProduct());
+		        				System.out.println("You don't have shears to get " + possessive(animal.getName()) + " " + animal.getAnimalProduct());
 		        				pause();
 		        				return;
 		        			} else {
@@ -1503,5 +1539,293 @@ public class Main {
 			return 0.5;
 		else 
 			return 1;
+	}
+	
+	private String colorize (char c) {
+		switch (c) {
+			case 'P': return GREEN + c + RESET;
+			case 'c': return YELLOW + c + RESET;
+			case 'C': return BROWN + c + RESET;
+			case 'S': return WHITE_BRIGHT + c + RESET;
+			default: return String.valueOf(c);
+		}
+	}
+	
+	private String possessive (String name) {
+		if (name.toLowerCase().endsWith("s")) {
+			return name + "'";
+		}
+		return name + "'s";
+	}
+	
+	private void loginOrRegister () {
+		while (true) {
+			spaceConsole();
+			System.out.println("=== Btardew Walley ===");
+			System.out.println("1. Login");
+			System.out.println("2. Register");
+			System.out.println("3. Exit");
+			System.out.print(">> ");
+			
+			try {
+				int choice = sc.nextInt();
+				sc.nextLine();
+				
+				switch (choice) {
+					case 1:
+						if (initLogin()) return;
+						break;
+					case 2:
+						if (initRegister()) return;
+						break;
+					case 3:
+						System.out.println("Goodbye!");
+						System.exit(0);
+				}
+			} catch (Exception e) {
+				sc.nextLine();
+			}
+		}
+	}
+	
+	private boolean initLogin () {
+		spaceConsole();
+		System.out.println("=== Login ===");
+		System.out.print("Username (0 to go back): ");
+		String username = sc.nextLine().trim();
+		if (username.equals("0")) return false;
+		
+		System.out.print("Password (0 to go back): ");
+		String password = sc.nextLine().trim();
+		if (password.equals("0")) return false;
+		
+		User user = User.authenticate(username, password);
+		if (user != null) {
+			currentUser = user;
+			System.out.println("Login successful!");
+			pause();
+			return true;
+		} else {
+			System.out.println("Invalid username or password!");
+			pause();
+			return false;
+		}
+	}
+	
+	private boolean initRegister () {
+		spaceConsole();
+		System.out.println("=== Register ===");
+		
+		String username;
+		while (true) {
+			System.out.print("Username (>= 8 characters) [0 to go back]: ");
+			username = sc.nextLine().trim();
+			
+			if (username.equals("0")) return false;
+			
+			if (!User.isValidUsername(username)) {
+				System.out.println("Username must be at least 8 characters!");
+				continue;
+			}
+			
+			if (User.isUsernameTaken(username)) {
+				System.out.println("Username already taken!");
+				continue;
+			}
+			
+			break;
+		}
+		
+		String password;
+		while (true) {
+			System.out.print("Password (>= 8 characters, at least 1 letter and 1 number) [0 to go back]: ");
+			password = sc.nextLine().trim();
+			
+			if (password.equals("0")) return false;
+			
+			if (!User.isValidPassword(password)) {
+				System.out.println("Password must be at least 8 characters and contain at least 1 letter and 1 number!");
+				continue;
+			}
+			
+			break;
+		}
+		
+		User.register(username, password);
+		currentUser = new User(username, password);
+		System.out.println("Registration successful!");
+		pause();
+		return true;
+	}
+	
+	private void exitGame () {
+		savePlayerData();
+		System.out.println("Game saved successfully! Goodbye!");
+		System.exit(0);
+	}
+	
+	private void savePlayerData () {
+		try {
+			File dir = new File("user_data");
+			if (!dir.exists()) {
+				dir.mkdir();
+			}
+			BufferedWriter bw = new BufferedWriter(new FileWriter("user_data/" + currentUser.getUsername() + "_data.txt"));
+			
+			bw.write(String.format("PLAYER#%.2f#%d#%d#%d#%d#%c",
+					player.getMoney(), player.getDay(), currMapIndex,
+					player.getX().getCoordinate(), player.getY().getCoordinate(), currTile));
+			bw.newLine();
+
+			for (PlayerItem item : player.getInventory()) {
+				if (item.getItem() instanceof Tool) {
+					bw.write(String.format("TOOL#%s#%d", item.getItem().getName(), item.getQuantity()));
+				} else if (item.getItem() instanceof PlantSeed) {
+					PlantSeed seed = (PlantSeed) item.getItem();
+					bw.write(String.format("SEED#%s#%.2f#%c#%d#%d",
+							seed.getName(), seed.getPrice(seed.getName()), seed.getSymbol(), seed.getGrowthTime(), item.getQuantity()));
+				} else if (item.getItem() instanceof AnimalProduct) {
+					AnimalProduct ap = (AnimalProduct) item.getItem();
+					bw.write(String.format("ANIMAL_PRODUCT#%s#%.2f#%d#%d",
+							ap.getName(), ap.getPrice(ap.getName()), ap.getGrade(), item.getQuantity()));
+				} else if (item.getItem() instanceof FarmProduct) {
+					FarmProduct fp = (FarmProduct) item.getItem();
+					bw.write(String.format("FARM_PRODUCT#%s#%.2f#%d#%d",
+							fp.getName(), fp.getPrice(fp.getName()), fp.getFreshness(), item.getQuantity()));
+				}
+				bw.newLine();
+			}
+			
+			for (Animal animal : player.getAnimals()) {
+				bw.write(String.format("ANIMAL#%c#%s#%s#%s#%d#%d#%d#%.2f#%b",
+						animal.getSymbol(), animal.getName(), animal.getType(), animal.getAnimalProduct(),
+						animal.getHarvestRate(), animal.getAnimalX(), animal.getAnimalY(),
+						animal.getPrice(), animal.isHarvestable()));
+				bw.newLine();
+			}
+			
+			for (Plant plant : player.getPlants()) {
+				bw.write(String.format("PLANT#%c#%s#%d#%d#%d#%.2f#%b",
+						plant.getSymbol(), plant.getName(), plant.getPlantX(), plant.getPlantY(),
+						plant.getGrowthTime(), plant.getPrice(), plant.isHarvestable()));
+				bw.newLine();
+			}
+			
+			bw.close();
+		} catch (IOException e) {
+			System.out.println("Error saving player data!");
+		}
+	}
+	
+	private void loadPlayerData () {
+		File saveFile = new File("user_data/" + currentUser.getUsername() + "_data.txt");
+		if (!saveFile.exists()) return;
+		
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(saveFile));
+			String line;
+			
+			while ((line = br.readLine()) != null) {
+				String[] parts = line.split("#");
+				String type = parts[0];
+				
+				switch (type) {
+					case "PLAYER":
+						player.setMoney(Double.parseDouble(parts[1]));
+						player.setDay(Integer.parseInt(parts[2]));
+						currMapIndex = Integer.parseInt(parts[3]);
+						player.getX().setCoordinate(Integer.parseInt(parts[4]));
+						player.getY().setCoordinate(Integer.parseInt(parts[5]));
+						currTile = parts[6].charAt(0);
+						break;
+					
+					case "TOOL":
+						String toolName = parts[1];
+						int toolQty = Integer.parseInt(parts[2]);
+						Tool loadedTool = new Tool(toolName, 0);
+						player.getInventory().add(new PlayerItem(
+								new Tool(toolName, (int) loadedTool.getPrice(toolName)), toolQty));
+						break;
+					
+					case "SEED":
+						String seedName = parts[1];
+						double seedPrice = Double.parseDouble(parts[2]);
+						char seedSymbol = parts[3].charAt(0);
+						int seedGrowth = Integer.parseInt(parts[4]);
+						int seedQty = Integer.parseInt(parts[5]);
+						player.getInventory().add(new PlayerItem(
+								new PlantSeed(seedName, seedPrice, seedSymbol, seedGrowth), seedQty));
+						break;
+					
+					case "ANIMAL_PRODUCT":
+						String apName = parts[1];
+						double apPrice = Double.parseDouble(parts[2]);
+						int apGrade = Integer.parseInt(parts[3]);
+						int apQty = Integer.parseInt(parts[4]);
+						player.getInventory().add(new PlayerItem(
+								new AnimalProduct(apName, (int) apPrice, apGrade), apQty));
+						break;
+					
+					case "FARM_PRODUCT":
+						String fpName = parts[1];
+						double fpPrice = Double.parseDouble(parts[2]);
+						int fpFreshness = Integer.parseInt(parts[3]);
+						int fpQty = Integer.parseInt(parts[4]);
+						player.getInventory().add(new PlayerItem(
+								new FarmProduct(fpName, fpPrice, fpFreshness), fpQty));
+						break;
+					
+					case "ANIMAL":
+						char aSymbol = parts[1].charAt(0);
+						String aName = parts[2];
+						String aType = parts[3];
+						String aProduct = parts[4];
+						int aHarvestRate = Integer.parseInt(parts[5]);
+						int aX = Integer.parseInt(parts[6]);
+						int aY = Integer.parseInt(parts[7]);
+						double aPrice = Double.parseDouble(parts[8]);
+						boolean aHarvestable = Boolean.parseBoolean(parts[9]);
+						Animal animal = new Animal(aSymbol, aName, aType, aProduct, aHarvestRate, aX, aY, aPrice, aHarvestable);
+						player.getAnimals().add(animal);
+						GameMap.ANIMAL_FARM_MAP[aX][aY] = aSymbol;
+						break;
+					
+					case "PLANT":
+						char pSymbol = parts[1].charAt(0);
+						String pName = parts[2];
+						int pX = Integer.parseInt(parts[3]);
+						int pY = Integer.parseInt(parts[4]);
+						int pGrowthTime = Integer.parseInt(parts[5]);
+						double pPrice = Double.parseDouble(parts[6]);
+						boolean pHarvestable = Boolean.parseBoolean(parts[7]);
+						Plant plant = new Plant(pSymbol, pName, pX, pY, pGrowthTime, pPrice, pHarvestable);
+						player.getPlants().add(plant);
+						if (pHarvestable) {
+							GameMap.PLANT_FARM_MAP[pX][pY] = Character.toUpperCase(pSymbol);
+						} else {
+							GameMap.PLANT_FARM_MAP[pX][pY] = pSymbol;
+						}
+						break;
+				}
+			}
+			
+			br.close();
+			
+			Iterator<Tool> it = availableTools.iterator();
+			while (it.hasNext()) {
+				Tool tool = it.next();
+				for (PlayerItem item : player.getInventory()) {
+					if (item.getItem() instanceof Tool && item.getItem().getName().equals(tool.getName())) {
+						it.remove();
+						break;
+					}
+				}
+			}
+			
+		} catch (FileNotFoundException e) {
+
+		} catch (IOException e) {
+			System.out.println("Error loading player data!");
+		}
 	}
 }

@@ -14,6 +14,7 @@ public class GameUI {
 		"#  A to move player LEFT   #".toCharArray(),
 		"#  D to move player RIGHT  #".toCharArray(),
 		"#  E to open inventory     #".toCharArray(),
+		"#  Q to exit game          #".toCharArray(),
 		"############################".toCharArray()	
 	};
 	
