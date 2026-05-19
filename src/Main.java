@@ -184,7 +184,7 @@ public class Main {
 	    for (int i = 1; i <= 2; i++) {
 	        String line = new String(infoUI[i]);
 	        int colon = line.indexOf(":");
-	        String value = i == 1 ? String.valueOf(player.getDay()) : String.valueOf(player.getMoney());
+	        String value = i == 1 ? String.valueOf(player.getDay()) : String.format(Locale.ROOT, "%.2f", player.getMoney());
 	        int width = 16;
 	        line = line.substring(0, colon + 2) + String.format("%-" + width + "s", value) + "#";
 	        infoUI[i] = line.toCharArray();
@@ -648,7 +648,7 @@ public class Main {
     	while (true) {
     		spaceConsole();
     		System.out.println("Animal Shop");
-    		System.out.printf("Money: %.2f$\n", player.getMoney());
+    		System.out.printf("Money: $%.2f%n", player.getMoney());
             System.out.println("1. Buy Farm Animals");
             System.out.println("2. Sell Farm Animals");
             System.out.println("3. Sell Animal Products");
@@ -685,7 +685,7 @@ public class Main {
 			
     		System.out.println("Buy Farm Animals");
     		System.out.println();
-    		System.out.println("Money: $" + player.getMoney());
+    		System.out.printf("Money: $%.2f%n", player.getMoney());
     		System.out.println();
 
     		System.out.println("================================================");
@@ -767,7 +767,7 @@ public class Main {
 			
     		System.out.println("Sell Farm Animals");
     		System.out.println();
-    		System.out.println("Money: $" + player.getMoney());
+    		System.out.printf("Money: $%.2f%n", player.getMoney());
     		System.out.println();
     		
     		System.out.println("===================================================");
@@ -832,7 +832,7 @@ public class Main {
 			
 			System.out.println("Sell Animal Products");
     		System.out.println();
-    		System.out.println("Money: $" + player.getMoney());
+    		System.out.printf("Money: $%.2f%n", player.getMoney());
     		System.out.println();
 			
 			System.out.println("===========================================================");
@@ -921,7 +921,7 @@ public class Main {
     	while (true) {
     		spaceConsole();
     		System.out.println("Farm Shop");
-    		System.out.printf("Money: %.2f$\n", player.getMoney());
+    		System.out.printf("Money: $%.2f%n", player.getMoney());
             System.out.println("1. Buy Seeds");
             System.out.println("2. Sell Farm Products");
             System.out.println("3. Exit");
@@ -954,7 +954,7 @@ public class Main {
 			
     		System.out.println("Buy Seeds");
     		System.out.println();
-    		System.out.println("Money: $" + player.getMoney());
+    		System.out.printf("Money: $%.2f%n", player.getMoney());
     		System.out.println();
 
     		System.out.println("================================================");
@@ -1050,7 +1050,7 @@ public class Main {
 			
 			System.out.println("Sell Farm Products");
     		System.out.println();
-    		System.out.println("Money: $" + player.getMoney());
+    		System.out.printf("Money: $%.2f%n", player.getMoney());
     		System.out.println();
 			
 			System.out.println("===========================================================");
@@ -1142,7 +1142,7 @@ public class Main {
 			spaceConsole();
     		System.out.println("Buy Tools");
     		System.out.println();
-    		System.out.println("Money: $" + player.getMoney());
+    		System.out.printf("Money: $%.2f%n", player.getMoney());
     		System.out.println();
 
     		ArrayList<Tool> buyableTools = new ArrayList<>();
