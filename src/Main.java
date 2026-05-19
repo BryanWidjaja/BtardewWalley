@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -284,11 +285,19 @@ public class Main {
             case 't':
             	if (devMode) {
             		for (Tool tool : availableTools) {
-                        player.getInventory().add(
-                            new PlayerItem(new Tool(tool.getName(), (int) tool.getPrice(tool.getName())), 1)
-                        );
+            			boolean owned = false;
+            			for (PlayerItem item : player.getInventory()) {
+            				if (item.getItem() instanceof Tool && item.getItem().getName().equals(tool.getName())) {
+            					owned = true;
+            					break;
+            				}
+            			}
+            			if (!owned) {
+            				player.getInventory().add(
+            					new PlayerItem(new Tool(tool.getName(), (int) tool.getPrice(tool.getName())), 1)
+            				);
+            			}
                     }
-                    availableTools.clear();
             	}
             	return;
             case 'p':
@@ -340,22 +349,24 @@ public class Main {
             	return;
             case 'k':
             	if (devMode) {
-            		PlantSeed wheat = new PlantSeed("Wheat", 50, 'w', 3);
-            		
-            		ArrayList<PlantSeed> tempSeeds = new ArrayList<>();
-            		
-            		tempSeeds.add(wheat);
-            		
-            		for (PlantSeed tempSeed : tempSeeds) {
+            		for (PlantSeed availableSeed : availableSeeds) {
+            			PlantSeed tempSeed = new PlantSeed(
+            					availableSeed.getName(),
+            					availableSeed.getPrice(availableSeed.getName()),
+            					availableSeed.getSymbol(),
+            					availableSeed.getGrowthTime()
+            			);
+
             			boolean found = false;
-            			
+
             			for (PlayerItem item : player.getInventory()) {
-        					if (item.getItem().getName().equals(tempSeed.getName())) {
+        					if (item.getItem() instanceof PlantSeed &&
+        						item.getItem().getName().equals(tempSeed.getName())) {
         						item.setQuantity(item.getQuantity() + 10);
         						found = true;
         					}
         				}
-        				
+
         				if (!found) {
         					player.getInventory().add(new PlayerItem(tempSeed, 10));
         				}
@@ -429,7 +440,7 @@ public class Main {
     }
     
     private boolean checkWall(char[][] map, int x, int y) {
-        String walls = "#+-_|/\\\"'`':,";
+        String walls = "#+-_|/\\\"'`:,";
 
         char tile = map[x][y];
 
@@ -676,7 +687,7 @@ public class Main {
     		System.out.println();
     		System.out.println("Money: $" + player.getMoney());
     		System.out.println();
-    		
+
     		System.out.println("================================================");
     		System.out.printf("| %-3s | %-10s | %-12s | %-10s |\n", "No.", "Name", "Harvest Rate", "Price");
     		System.out.println("================================================");
@@ -698,24 +709,33 @@ public class Main {
 
                     if (player.getMoney() >= selectedAnimal.getPrice()) {
                         player.setMoney(player.getMoney() - selectedAnimal.getPrice());
-                        
+
                         String name = null;
-                        boolean nameTaken;
-                        
+                        boolean valid;
+
                         do {
                         	System.out.print("Input new farm animal's name [<= 15 characters]: ");
-                        	name = sc.nextLine();
-                        	
-                        	nameTaken = false;
-                        	for (Animal a : player.getAnimals()) {
-                        		if (a.getName().equalsIgnoreCase(name.trim())) {
-                        			nameTaken = true;
-                        			System.out.println("Name already taken!");
-                        			break;
+                        	name = sc.nextLine().trim();
+
+                        	valid = true;
+
+                        	if (name.isEmpty()) {
+                        		System.out.println("Name cannot be empty!");
+                        		valid = false;
+                        	} else if (name.length() > 15) {
+                        		System.out.println("Name must be 15 characters or fewer!");
+                        		valid = false;
+                        	} else {
+                        		for (Animal a : player.getAnimals()) {
+                        			if (a.getName().equalsIgnoreCase(name)) {
+                        				System.out.println("Name already taken!");
+                        				valid = false;
+                        				break;
+                        			}
                         		}
                         	}
-                        } while (name.length() > 15 || name.trim().isEmpty() || nameTaken);
-                        
+                        } while (!valid);
+
                         insertAnimal(selectedAnimal.getType(), name);
 
                         System.out.println("Successfully bought a farm animal");
@@ -936,7 +956,7 @@ public class Main {
     		System.out.println();
     		System.out.println("Money: $" + player.getMoney());
     		System.out.println();
-    		
+
     		System.out.println("================================================");
     		System.out.printf("| %-3s | %-10s | %-12s | %-10s |\n", "No.", "Name", "Growth Time", "Price");
     		System.out.println("================================================");
@@ -1118,14 +1138,26 @@ public class Main {
     private void initToolStore () {
     	while (true) {
 			int counter = 1;
-    		
+
 			spaceConsole();
     		System.out.println("Buy Tools");
     		System.out.println();
     		System.out.println("Money: $" + player.getMoney());
     		System.out.println();
-    		
-    		if (availableTools.isEmpty()) {
+
+    		ArrayList<Tool> buyableTools = new ArrayList<>();
+    		for (Tool tool : availableTools) {
+    			boolean owned = false;
+    			for (PlayerItem item : player.getInventory()) {
+    				if (item.getItem() instanceof Tool && item.getItem().getName().equals(tool.getName())) {
+    					owned = true;
+    					break;
+    				}
+    			}
+    			if (!owned) buyableTools.add(tool);
+    		}
+
+    		if (buyableTools.isEmpty()) {
     			System.out.println("You already buy all tools!");
     			pause();
     			return;
@@ -1133,27 +1165,26 @@ public class Main {
             System.out.println("=================================");
             System.out.printf("| %-3s | %-10s | %-10s |\n", "No.", "Name", "Price");
             System.out.println("=================================");
-            
-            for (Tool tool : availableTools) {
+
+            for (Tool tool : buyableTools) {
             	System.out.printf("| %-3s | %-10s | %-10s |\n", counter++, tool.getName(), tool.getPrice(tool.getName()));
             }
-            
+
             System.out.println("=================================");
             System.out.print("Choose Tool [1-" + (counter - 1) + "] [0 to exit]: ");
             try {
                 int choice = sc.nextInt();
                 sc.nextLine();
-                
+
                 if (choice == 0) return;
 
                 if (choice >= 1 && choice < counter) {
-                    Tool selectedTool = availableTools.get(choice - 1);
+                    Tool selectedTool = buyableTools.get(choice - 1);
                     int price = (int) selectedTool.getPrice(selectedTool.getName());
 
                     if (player.getMoney() >= price) {
                         player.setMoney(player.getMoney() - price);
                         player.getInventory().add(new PlayerItem(new Tool(selectedTool.getName(), price), 1));
-                        availableTools.remove(selectedTool);
 
                         System.out.println("Successfully buy a tool");
                     } else {
@@ -1461,7 +1492,7 @@ public class Main {
 
                 FarmProduct newProduct = new FarmProduct(
                         plant.getName(),
-                        (int) (plant.getPrice() * getFreshnessMultiplier(freshness)),
+                        plant.getPrice() * getFreshnessMultiplier(freshness),
                         freshness
                 );
 
@@ -1514,10 +1545,10 @@ public class Main {
         int grade2Chance = day;
         int grade3Chance = day / 2;
 
-        if (gradeRand <= grade2Chance) {
-            return 2;
-        } else if (gradeRand <= grade2Chance + grade3Chance) {
+        if (gradeRand <= grade3Chance) {
             return 3;
+        } else if (gradeRand <= grade3Chance + grade2Chance) {
+            return 2;
         } else {
             return 1;
         }
@@ -1703,40 +1734,40 @@ public class Main {
 			}
 			BufferedWriter bw = new BufferedWriter(new FileWriter("user_data/" + currentUser.getUsername() + "_data.txt"));
 			
-			bw.write(String.format("PLAYER#%.2f#%d#%d#%d#%d#%c",
+			bw.write(String.format(Locale.ROOT, "PLAYER#%.2f#%d#%d#%d#%d#%c",
 					player.getMoney(), player.getDay(), currMapIndex,
 					player.getX().getCoordinate(), player.getY().getCoordinate(), currTile));
 			bw.newLine();
 
 			for (PlayerItem item : player.getInventory()) {
 				if (item.getItem() instanceof Tool) {
-					bw.write(String.format("TOOL#%s#%d", item.getItem().getName(), item.getQuantity()));
+					bw.write(String.format(Locale.ROOT, "TOOL#%s#%d", item.getItem().getName(), item.getQuantity()));
 				} else if (item.getItem() instanceof PlantSeed) {
 					PlantSeed seed = (PlantSeed) item.getItem();
-					bw.write(String.format("SEED#%s#%.2f#%c#%d#%d",
+					bw.write(String.format(Locale.ROOT, "SEED#%s#%.2f#%c#%d#%d",
 							seed.getName(), seed.getPrice(seed.getName()), seed.getSymbol(), seed.getGrowthTime(), item.getQuantity()));
 				} else if (item.getItem() instanceof AnimalProduct) {
 					AnimalProduct ap = (AnimalProduct) item.getItem();
-					bw.write(String.format("ANIMAL_PRODUCT#%s#%.2f#%d#%d",
+					bw.write(String.format(Locale.ROOT, "ANIMAL_PRODUCT#%s#%.2f#%d#%d",
 							ap.getName(), ap.getPrice(ap.getName()), ap.getGrade(), item.getQuantity()));
 				} else if (item.getItem() instanceof FarmProduct) {
 					FarmProduct fp = (FarmProduct) item.getItem();
-					bw.write(String.format("FARM_PRODUCT#%s#%.2f#%d#%d",
+					bw.write(String.format(Locale.ROOT, "FARM_PRODUCT#%s#%.2f#%d#%d",
 							fp.getName(), fp.getPrice(fp.getName()), fp.getFreshness(), item.getQuantity()));
 				}
 				bw.newLine();
 			}
-			
+
 			for (Animal animal : player.getAnimals()) {
-				bw.write(String.format("ANIMAL#%c#%s#%s#%s#%d#%d#%d#%.2f#%b",
+				bw.write(String.format(Locale.ROOT, "ANIMAL#%c#%s#%s#%s#%d#%d#%d#%.2f#%b",
 						animal.getSymbol(), animal.getName(), animal.getType(), animal.getAnimalProduct(),
 						animal.getHarvestRate(), animal.getAnimalX(), animal.getAnimalY(),
 						animal.getPrice(), animal.isHarvestable()));
 				bw.newLine();
 			}
-			
+
 			for (Plant plant : player.getPlants()) {
-				bw.write(String.format("PLANT#%c#%s#%d#%d#%d#%.2f#%b",
+				bw.write(String.format(Locale.ROOT, "PLANT#%c#%s#%d#%d#%d#%.2f#%b",
 						plant.getSymbol(), plant.getName(), plant.getPlantX(), plant.getPlantY(),
 						plant.getGrowthTime(), plant.getPrice(), plant.isHarvestable()));
 				bw.newLine();
@@ -1841,22 +1872,13 @@ public class Main {
 			}
 			
 			br.close();
-			
-			Iterator<Tool> it = availableTools.iterator();
-			while (it.hasNext()) {
-				Tool tool = it.next();
-				for (PlayerItem item : player.getInventory()) {
-					if (item.getItem() instanceof Tool && item.getItem().getName().equals(tool.getName())) {
-						it.remove();
-						break;
-					}
-				}
-			}
-			
+
 		} catch (FileNotFoundException e) {
 
 		} catch (IOException e) {
 			System.out.println("Error loading player data!");
+		} catch (RuntimeException e) {
+			System.out.println("Save file is corrupted or malformed!");
 		}
 	}
 	
